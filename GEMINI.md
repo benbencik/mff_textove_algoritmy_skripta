@@ -4,7 +4,7 @@ This project aims to create study materials for the "Text Algorithms" course tau
 
 ## Goal
 
-The primary goal is to produce high-quality study materials in English (B1/B2 level) for each topic covered in the course. These outputs are store in the notes folder.
+The primary goal is to produce high-quality study materials in English (B1/B2 level) for each topic covered in the course. These outputs are store in the `notes/` directory.
 
 ## Source Materials
 
@@ -28,4 +28,4 @@ Always generate a single lecture only (you may use previous lectures as a refere
 
 ## Versioning
 
-After every significant change, a new git commit should be created.
+After every significant change, a new git commit should be created. The lectures folder should not be versioned.
