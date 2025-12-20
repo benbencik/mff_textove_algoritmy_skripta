@@ -60,3 +60,4 @@ The KMP algorithm is faster because it cleverly uses information from mismatches
 
 
 Because of its efficiency, KMP is a very important algorithm for pattern matching.
+#pagebreak(weak: true)

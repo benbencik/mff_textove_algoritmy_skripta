@@ -31,5 +31,7 @@ Stringology helps solve many computational problems.
     - *Finding Repetitions*: Locating all repeating parts in a string.
     - *Longest Common Substring*: Finding the longest shared part of two strings.
     - *Data Compression*: Making files smaller by finding and replacing repeated patterns.
-    - *Bioinformatics*: Analyzing DNA and protein sequences, which are very long strings.
-])
+        - *Bioinformatics*: Analyzing DNA and protein sequences, which are very long strings.
+      ]
+    )
+    #pagebreak(weak: true)
