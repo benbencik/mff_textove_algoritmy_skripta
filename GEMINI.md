@@ -15,25 +15,6 @@ The primary goal is to produce high-quality lecture notes in English (B1/B2 leve
 - `GEMINI.md`: This file, containing the project's documentation.
 - `.gitignore`: Specifies files and directories to be ignored by git.
 
-## How to Build
-
-To compile the project and generate the `main.pdf` file, run the following command from the project's root directory:
-
-```bash
-typst compile main.typ
-```
-
-## How to Add a New Chapter
-
-1.  Create a new Typst file in the `notes/` directory. The filename should follow the pattern `NN-chapter-title.typ`, where `NN` is a two-digit number representing the chapter order.
-2.  Add your content to the new file, following the established format and style.
-3.  Open `main.typ` and add an `#include` statement for your new chapter file, in the correct order.
-4.  Re-compile the project using the command in the "How to Build" section.
-
-## Source Materials
-
-The foundation for these materials will be the lecture presentations located in the `lectures/` directory. Each presentation corresponds to a specific topic within the subject.
-
 ## Output Format
 
 The final study materials will be written in [Typst](https://typst.app/), a modern typesetting system. Each lecture is converted into a single file, which are then included in the main document.
@@ -52,4 +33,4 @@ Always generate a single lecture only (you may use previous lectures as a refere
 
 ## Versioning
 
-After every significant change, a new git commit should be created. The `lectures/` directory and `*.pdf` files should not be versioned.
+After every significant change, a new git commit should be created and pushed. The `lectures/` directory and `*.pdf` files should not be versioned.
