@@ -39,9 +39,14 @@ The final study materials will be written in [Typst](https://typst.app/), a mode
 
 ## How Typst works
 
+Important: NEVER USE LaTeX expressions prefixed by backslash!!!
+In Typst, backslashes are only used for escaping, not for expressions nor symbols!!!
+
 In math mode, you just use the name of the character like: `$ pi $`. Outside of
-the match mode, you need to use `#sym.pi`. NEVER use expressions like `\pi` as
-these come from LaTeX. Dollars `$` that do not start the math mode should be prefixed by slash, so use `\$`.
+the match mode, you need to use `#sym.pi`.
+Dollars `$` that do not start the math mode should be prefixed by slash.
+Strings in math mode are enclosed in quotes. When quotes are supposed to be used in the math mode,
+they need to be enclosed in string and escaped.
 
 ## Process
 
