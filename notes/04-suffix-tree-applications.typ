@@ -5,10 +5,6 @@
 
 #set text(lang: "en")
 
-#outline()
-
-#pagebreak()
-
 = Suffix Tree Applications
 
 This chapter explores various applications of suffix trees, a powerful data structure for string processing.

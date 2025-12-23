@@ -26,7 +26,8 @@ The final study materials will be written in [Typst](https://typst.app/), a mode
 3.  **Translate and simplify:** Rewrite the extracted information in clear and concise B2 level English.
 4.  **Structure the content:** Organize the material in a logical way, suitable for study.
 5.  **Add examples/explain:** Add an example (inspired by the original presentation) and add key concepts.
-6.  **Format in Typst:** Create a `.typ` file for each topic, formatting the content using Typst's syntax. Always ensure that the syntax is correct, feel free to consult official documentation.
+6.  **Add tasks:** Add numbered tasks inspired by each lecture topic that could occur in an exam based on presentation and your judgment. After tasks, add solution to the tasks on a new page.
+7.  **Format in Typst:** Create a `.typ` file for each topic, formatting the content using Typst's syntax. Always ensure that the syntax is correct, feel free to consult official documentation.
 
 ## Text format
 
