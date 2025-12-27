@@ -39,22 +39,24 @@ To avoid re-traversing the tree from the root in every extension, we use an *act
 The active point is updated after each extension, allowing the algorithm to resume from where it left off.
 
 === Suffix Links
-*Suffix links* are another crucial optimization. A suffix link from an internal node `u` representing a string `αw` (where `α` is a single character and `w` is a non-empty string) points to another node `v` that represents the string `w`.
+*Suffix links* are the most important optimization for achieving linear time complexity. A suffix link from an internal node `u` representing a string `αw` (where `α` is a single character and `w` is a non-empty string) points to another node `v` that represents the string `w`.
 
-When we split an edge and create a new internal node, we also create a suffix link from the previous internal node (if any) to the new one. This allows for very fast traversal between suffixes that differ by one character at the beginning.
+Their power becomes clear when we perform a sequence of extensions. Suppose we just inserted a suffix `αw` by splitting an edge and creating a new internal node `u`. To insert the next suffix, `w`, we would normally have to go back to the root and traverse the path for `w` from scratch. However, if `u` has a suffix link to `v` (which represents `w`), we can simply jump to `v` in a single step. This saves a significant amount of re-traversal.
+
+In the algorithm, after a split (Rule 2), we follow the suffix link from the *parent* of the newly created leaf and update the active point from there. This ensures that in each phase, the total number of steps is proportional to the number of extensions, not the length of the suffixes.
 
 *Pros of Suffix Links:*
-- They enable faster traversal through the tree, which is essential for the linear-time complexity.
+- They enable nearly constant-time traversal between consecutive suffixes, which is the key to the overall linear-time complexity.
 
 *Cons of Suffix Links:*
 - They add some complexity to the algorithm, as they need to be created and maintained correctly.
 
 === Edge Representation
-A simple but powerful trick is to represent edge labels not as explicit strings, but as pairs of indices `(start, end)`. For leaf edges, we can use a "global end" variable that is updated in each phase. This means all leaf edges are extended implicitly in every phase without any extra work.
+A simple but powerful trick is to represent edge labels not as explicit strings, but as pairs of indices `(start, end)`. For leaf edges, we can use a "global end" `(start, ∞)` variable that is updated in each phase. This means all leaf edges are extended implicitly in every phase without any extra work.
 
 == Algorithm Overview
 
-Here is a high-level overview of Ukkonen's algorithm:
+Here is a more detailed high-level overview of Ukkonen's algorithm that highlights the use of suffix links:
 
 #v(0.5em)
 #let block(content) = {
@@ -64,24 +66,49 @@ Here is a high-level overview of Ukkonen's algorithm:
 #block[
   ```
   Ukkonen(S):
-    Initialize a root node and an active point (root, null, 0).
+    Initialize tree, active_point = (root, null, 0)
+    last_split_node = null
+
     For i from 1 to n:
-      // Phase i
+      // Phase i: Add S[i] to the tree
       For j from 1 to i:
-        // Extension j
-        Follow the active point to find the end of S[j..i-1].
-        If S[i] is not found:
-          Apply Rule 1 or 2:
-            - Extend a leaf edge or split an edge and create a new leaf.
-            - If a new internal node was created, create a suffix link.
-          Update the active point.
-        Else (Rule 3 - Show Stopper):
-          Update the active point and break to the next phase.
+        // Extension j: Ensure S[j..i] is in the tree
+        If active_point needs update:
+          Follow suffix link from active_point.node if available,
+          otherwise traverse from root.
+
+        If S[i] is not found at active_point:
+          // Rule 2: Split edge or create new leaf
+          new_node = split_edge() or create_leaf()
+
+          If last_split_node is not null:
+            Create suffix link from last_split_node to new_node.
+
+          last_split_node = new_node
+
+          // Follow suffix link for next extension
+          active_point = (active_point.node.suffix_link, ...)
+        Else:
+          // Rule 3: Show Stopper
+          last_split_node = null
+          // Update active_point for S[i] and break to next phase
+          break
   ```
 ]
 #v(0.5em)
 
 After all phases are complete, the implicit suffix tree is converted to a proper suffix tree by appending a unique terminal symbol and resolving all "infinity" edge labels to `n`.
+
+== The Path to O(n) Complexity
+
+A naive analysis of the nested loops in the algorithm suggests a complexity of $O(n^2)$. However, the combination of the tricks described above ensures a linear time complexity. Here's an intuitive explanation:
+
+- *Active Point Traversal:* The active point can move down the tree (increasing `active_length`) or across the tree using suffix links. The total number of downward moves is at most `n`.
+- *Suffix Links:* Each suffix link jump is an O(1) operation. The number of suffix link traversals is bounded by the number of extensions, which itself is limited.
+- *Show Stopper:* Rule 3 ensures that we only perform as many extensions in a phase as we need to. The number of extensions per phase is not always `i`.
+- *Amortized Analysis:* A more rigorous amortized analysis shows that the total work done across all phases is proportional to `n`. The key insight is that for every step down the tree (increasing `active_length`), we never have to re-traverse that part of the path again. Suffix links let us "reset" our position efficiently without going all the way back to the root.
+
+The combination of these factors ensures that the total number of operations is O(n), assuming the alphabet size is constant (e.g., using a hash map or array for branching). If the alphabet is large, the complexity might be O(n log |Σ|) due to branching.
 
 == Tasks
 
