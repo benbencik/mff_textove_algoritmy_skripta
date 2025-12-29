@@ -32,3 +32,4 @@
 #include "notes/14-string-distance.typ"
 #include "notes/15-approximate-string-matching.typ"
 #include "notes/16-approximate-string-matching-2.typ"
+#include "notes/exam_tasks.typ"
