@@ -24,7 +24,7 @@ The $"BWT"$ is a reversible permutation of a text. The $"BWT"$ of a text $T$ is 
 
 #example_box[
   *Example:*
-  For $T = "banana"$, append a special end-of-string character "\$" which is lexicographically smaller than any other character. $T = "banana\$"$.
+  For $T = "banana"$, append a special end-of-string character "\$" which is lexicographically smaller than any other character. $T = "banana$"$.
 
   Sorted rotations:
   ```
@@ -37,7 +37,7 @@ The $"BWT"$ is a reversible permutation of a text. The $"BWT"$ of a text $T$ is 
   nana$ba
   ```
 
-  The last column is `"annb$aa"`. This is the BWT. The first column is `"$$aaabnn"`.
+  The last column is `"annb$aa"`. This is the BWT. The first column is `"$aaabnn"`.
 ]
 
 == Key Components of the FM-Index
@@ -57,11 +57,44 @@ The *C-table* for an alphabet $Sigma$ is an array where $C[c]$ stores the number
 
 The $"Occ"(c, i)$ function returns the number of occurrences of character $c$ in the prefix of the $"BWT"$ string of length $i$, i.e., $"BWT"[0..i-1]$.
 - A naive implementation would take $O(i)$ time.
-- The *FM-index* uses a pre-computed data structure (often using checkpoints and bit-vectors) to answer $"Occ"$ queries in $O(1)$ time.
+- The *FM-index* uses a pre-computed data structure to answer $"Occ"$ queries much faster.
+
+=== Efficient Occ Data Structure
+
+To make $"Occ"$ queries efficient, a simple scan is not feasible. Two common approaches are checkpointing and wavelet trees.
+
+*Checkpointing:*
+A simple method is to store the full occurrence counts at regular intervals (checkpoints) in the BWT string. For a query $"Occ"(c, i)$, you find the nearest checkpoint before `i`, retrieve the stored counts, and then scan the remaining part of the string to `i`. This balances space and time but is not the most efficient.
+
+*Wavelet Trees:*
+A more powerful and standard solution is to use a *wavelet tree*. A wavelet tree is a data structure built on the BWT string that can answer `rank` (Occ), `select`, and `access` queries in logarithmic time with respect to the alphabet size.
+
+#info_box(title: "Wavelet Tree for Occ")[
+  1. *Structure:* The wavelet tree is a binary tree where leaves represent characters of the alphabet. Each internal node represents a subset of the alphabet. At each node, a bit-vector stores, for each character in its sequence, whether that character belongs to the alphabet subset of its left child (bit 0) or right child (bit 1).
+
+  2. *Querying Occ(c, i):* To find the number of occurrences of `c` up to position `i`, we traverse the tree from the root to the leaf for `c`.
+    - At the root, we check if `c` belongs to the left or right half of the alphabet. Suppose it's the right (bit 1). We compute the number of 1s up to position `i` in the root's bit-vector. Let this be $i'$. This tells us how many characters from the right half's alphabet appear in the prefix.
+    - We then move to the right child and recursively ask for the rank of the appropriate bit at the new position $i'$.
+    - This continues until we reach the leaf for `c`. The final rank is the answer.
+
+  3. *Performance:* With a supporting structure for the bit-vectors that allows for $O(1)$ rank queries, the total time for an `Occ` query on the wavelet tree is $O(log|Sigma|)$. The space complexity is $O(n log|Sigma|)$.
+]
 
 == LF-Mapping (Last-to-First Mapping)
 
 The core of the FM-index search is the LF-mapping property. For the $i$-th character of the BWT (which is $T["SA"[i]-1]$), its corresponding character in the first column is at index $j = C["BWT"[i]] + "Occ"("BWT"[i], i)$. This allows us to move from a character in the last column to its corresponding position in the first column.
+
+#example_box[
+  *LF-Mapping Example:*
+  Let's use our example where $T = "banana$"$ and BWT = "annb\$aa". The C-table is $C = ('\$': 0, 'a': 1, 'b': 4, 'n': 5)$.
+
+  Let's find the mapping for index $i=5$. The character is $"BWT"[5] = 'a'$.
+  - We need to calculate $"Occ"('a', 5)$, which is the number of 'a's in the prefix $"BWT"[0..4] = "annb$"$. The count is 1.
+  - The C-table value is $C['a'] = 1$.
+  - The new index is $j = C['a'] + "Occ"('a', 5) = 1 + 1 = 2$.
+
+  So, the 'a' at index 5 in the Last column corresponds to the 'a' at index 2 in the First column. This step is the fundamental operation used in the backward search.
+]
 
 == Pattern Search
 
