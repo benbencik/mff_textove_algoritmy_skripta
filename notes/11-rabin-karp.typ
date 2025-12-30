@@ -48,10 +48,30 @@ $h_"new" = ((h_i - T[i] * b^(m-1)) * b + T[i+m]) mod q$
 == Complexity
 
 - *Time Complexity:*
-  - *Worst case:* $O(m * (n-m+1))$. This happens if the hash values match for every substring, leading to a full comparison at every step (e.g., a text of all 'a's and a pattern of 'a's).
-  - *Average case:* $O(n+m)$. With a good hash function, collisions are rare.
+  The total time complexity can be broken down into hashing and verification.
+  - The initial hash computations take $O(m)$.
+  - The rolling hash updates for the entire text take $O(n)$.
+  - For each hash match, a verification step of $O(m)$ is required. Let `occ` be the number of true occurrences and `z` be the number of spurious hits (false positives). The total verification cost is $O(m("occ"+z))$.
+  - The total time complexity is $O(n + m("occ"+z))$.
+  - *Worst case:* $O(m dot n)$. This occurs if `z` is large, i.e., there are many spurious hits. For example, if all substrings have the same hash value.
 
 - *Space Complexity:* $O(1)$ (excluding the storage for text and pattern).
+
+=== Probabilistic Analysis
+The efficiency of Rabin-Karp depends on the number of spurious hits, `z`. By making a reasonable assumption about the hash function, we can analyze the expected performance.
+
+*Assumption:* The hash function distributes the hashes of strings uniformly over the range $[0, q-1]$. The probability of two different random strings having the same hash is approximately $1/q$.
+
+Under this assumption, the expected number of spurious hits is:
+$E[z] = (n-m+1) / q approx n/q$
+
+If we choose the prime modulus $q$ to be sufficiently large (e.g., larger than $n dot m$), the expected number of spurious hits becomes very small:
+$E[z] < (n-m+1) / (n dot m) < 1$
+
+With a negligible number of spurious hits, the verification cost becomes insignificant.
+- *Average-case (expected) time:* $O(n+m)$.
+
+This probabilistic guarantee makes Rabin-Karp very effective in practice.
 
 == Tasks
 
