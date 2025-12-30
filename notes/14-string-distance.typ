@@ -9,111 +9,197 @@
 
 = String Distance Metrics
 
-== Introduction
-
-In many applications, we need to quantify how different two strings are. This is done using *string distance metrics*. A metric `d(s1, s2)` is a function that takes two strings and returns a real number, satisfying certain properties (non-negativity, identity of indiscernibles, symmetry, and triangle inequality).
-
 == Hamming Distance
 
 The *Hamming distance* is defined for two strings of *equal length*. It is the number of positions at which the corresponding characters are different.
 
 #example_box[
   *Example:*
-  - `d_H("karolin", "kathrin") = 3` (differences at positions 2, 4, 5).
-  - `d_H("apple", "apply") = 1`.
+  - $d_H ("karolin", "kathrin") = 3$ (differences at positions 2, 4, 5).
+  - $d_H ("apple", "apply") = 1$.
 ]
 
 == Levenshtein Distance
 
-The *Levenshtein distance* is defined for two strings of *any length*. It is the minimum number of single-character edits (*insertions* or *deletions*) required to change one string into the other.
+The *Levenshtein distance*, in some strict definitions, considers the minimum number of single-character *insertions* and *deletions* required to change one string into the other. This version does not allow substitutions.
 
-- `d_L(s1, s2)` = minimum number of insertions and deletions to transform `s1` to `s2`.
-
-#example_box[
-  *Example:*
-  To transform "saturday" to "sunday":
-  1. "saturday" $arrow.r$ "s*u*turday" (delete 'a', 't')
-  2. "suturday" $arrow.r$ "sunday" (insert 'n')
-  This is not optimal. A better way:
-  "saturday" $arrow.r$ "sunday" requires 3 changes (2 deletions, 1 insertion).
-  The Levenshtein distance `d_L("saturday", "sunday")` is 3.
-]
+This metric is equivalent to the *LCS distance*, which is based on the Longest Common Subsequence. The distance is the total number of characters in both strings that are not part of the LCS:
+$d_L(A, B) = |A| + |B| - 2 * |"LCS"(A, B)|$.
 
 == Edit Distance
 
-The *Edit Distance*, also known as Levenshtein distance with substitution, includes a third operation: *replacement* (or substitution) of a character.
-- `d_E(s1, s2)` = minimum number of insertions, deletions, or replacements to transform `s1` to `s2`.
+A more common metric, also frequently referred to as Levenshtein distance, is the general *Edit Distance*. This metric includes *substitution* as a third basic operation.
+- $d_E(A, B)$ = minimum number of insertions, deletions, or substitutions to transform $A$ to $B$.
 
-Usually, the cost of each operation is 1.
+This is the version for which the Wagner-Fischer algorithm is typically presented, and it's generally assumed that the cost of each of these three operations is 1.
 
-== Wagner-Fischer Algorithm
+== Weighted Edit Distance
 
-The edit distance is commonly computed using a dynamic programming approach known as the *Wagner-Fischer algorithm*. It uses a matrix `D` of size `(m+1) x (n+1)`, where $m$ and $n$ are the lengths of the two strings.
+The concept of Edit Distance can be further generalized to *Weighted Edit Distance*, where each operation can have a different cost.
+- Cost of inserting character $c$: $"cost"_"ins"(c)$
+- Cost of deleting character $c$: $"cost"_"del"(c)$
+- Cost of substituting character $c_1$ with $c_2$: $"cost"_"sub"(c_1, c_2)$
 
-- `D[i, j]` stores the edit distance between the first `i` characters of string 1 and the first `j` characters of string 2.
-- The matrix is filled based on the recurrence relation:
-  $D[i, j] = min(
-    D[i-1, j] + 1, // deletion
-    D[i, j-1] + 1, // insertion
-    D[i-1, j-1] + "cost"("s1"[i], "s2"[j])
-  )$
-  where `cost` is 0 if the characters are the same, and 1 otherwise.
+The goal is to find the sequence of operations with the minimum total cost. The standard Levenshtein distance (with substitutions) is a special case where all costs are uniformly 1.
 
-The value $D[m, n]$ contains the edit distance between the two full strings. The time and space complexity is $O(m*n)$.
+== The Wagner-Fischer Algorithm
 
-== Longest Common Subsequence (LCS)
+The *Wagner-Fischer algorithm* is the classic dynamic programming solution for computing the *Edit Distance* (with substitution). It fills a matrix (or table) $D$ of size $(|A|+1) times (|B|+1)$, where $D\[i, j]$ stores the edit distance between the prefix $A[1..i]$ and $B[1..j]$.
 
-The problem of finding the *Longest Common Subsequence (LCS)* is closely related to edit distance. The length of the LCS of two strings can be calculated from their Levenshtein distance.
-- $|"LCS"("s1", "s2")| = ( |"s1"| + |"s2"| - d_L("s1", "s2") ) / 2$
+The recurrence relation for the general weighted case is:
+$D\[i, j] = min(D\[i-1, j] + "cost"_"del"(A\[i]),
+D\[i, j-1] + "cost"_"ins"(B\[j]),
+D\[i-1, j-1] + "cost"_"sub"(A\[i], B\[j])
+)$
+
+For the standard *Levenshtein distance* (all costs are 1), the recurrence simplifies to:
+$D\[i, j] = min(
+  D\[i-1, j] + 1,
+  D\[i, j-1] + 1,
+  D\[i-1, j-1] + c
+)$
+where $c$ is 0 if $A\[i] = B\[j]$ and 1 otherwise.
+
+#example_box[
+  *Example: Levenshtein Distance for "SUNDAY" and "SATURDAY"*
+
+  We compute the matrix $D$. The final distance is $D[6, 8] = 3$.
+
+  #table(
+    columns: 10,
+    align: center,
+    [], [*ε*], [*S*], [*A*], [*T*], [*U*], [*R*], [*D*], [*A*], [*Y*],
+    [*ε*], [0], [1], [2], [3], [4], [5], [6], [7], [8],
+    [*S*], [1], [0], [1], [2], [3], [4], [5], [6], [7],
+    [*U*], [2], [1], [1], [2], [2], [3], [4], [5], [6],
+    [*N*], [3], [2], [2], [2], [3], [3], [4], [5], [6],
+    [*D*], [4], [3], [3], [3], [3], [4], [3], [4], [5],
+    [*A*], [5], [4], [3], [4], [4], [4], [4], [3], [4],
+    [*Y*], [6], [5], [4], [4], [5], [5], [5], [4], [3],
+  )
+]
+
+== Optimizing the Dynamic Programming Approach
+
+The $O(n m)$ complexity of the Wagner-Fischer algorithm can be too slow for very long strings. Faster algorithms exploit properties of the DP matrix.
+
+=== The Diagonal Property
+
+A "diagonal" $d$ in the DP matrix consists of all cells $(i, j)$ where $j-i = d$. This property is key to many optimizations.
+
+#info_box(title: "Lemma: Diagonal Property")[
+  For any cell $(i, j)$ in the DP matrix for Levenshtein distance:
+  $D\[i, j] - D\[i-1, j-1]$ is either 0 or 1.
+
+  *Intuitive Proof:*
+  - The value $D\[i, j]$ is the minimum of three possibilities: $D\[i-1, j]+1$, $D\[i, j-1]+1$, and $D\[i-1, j-1] + c$.
+  - Both $D\[i-1, j]$ and $D\[i, j-1]$ are at least $D\[i-1, j-1]-1$. So the first two options in the `min` function are at least $D\[i-1, j-1]$.
+  - The third option is either $D\[i-1, j-1]$ (if characters match) or $D\[i-1, j-1]+1$ (if they don't).
+  - Therefore, the minimum, $D\[i, j]$, must be at least $D\[i-1, j-1]$.
+  - We can also get from prefix $A[..i-1], B[..j-1]$ to $A[..i], B[..j]$ with at most one extra operation (a substitution, or a delete+insert pair). So, $D\[i, j] <= D\[i-1, j-1] + 1$.
+  - Combining these, $D\[i-1, j-1] <= D\[i, j] <= D\[i-1, j-1] + 1$.
+]
+
+This property means values along a diagonal are non-decreasing and only increase in steps of 0 or 1.
+
+#example_box[
+  *Example of the Diagonal Property*
+  Let $A = "KITTEN"$ and $B = "SITTING"$. Consider the main diagonal ($d=0$) of their DP matrix.
+
+  #table(
+    columns: 9,
+    align: center,
+    [], [*ε*], [*S*], [*I*], [*T*], [*T*], [*I*], [*N*], [*G*],
+    [*ε*], [*0*], [1], [2], [3], [4], [5], [6], [7],
+    [*K*], [1], [*1*], [2], [3], [4], [5], [6], [7],
+    [*I*], [2], [2], [*1*], [2], [3], [4], [5], [6],
+    [*T*], [3], [3], [2], [*1*], [2], [3], [4], [5],
+    [*T*], [4], [4], [3], [2], [*1*], [2], [3], [4],
+    [*E*], [5], [5], [4], [3], [2], [*2*], [3], [4],
+    [*N*], [6], [6], [5], [4], [3], [3], [*2*], [3],
+  )
+
+  The values along the main diagonal are: 0, 1, 1, 1, 1, 2, 2.
+  Let's check the difference property:
+  - $D\[1,1] - D\[0,0] = 1-0 = 1$
+  - $D\[2,2] - D\[1,1] = 1-1 = 0$
+  - $D\[3,3] - D\[2,2] = 1-1 = 0$
+  - $D\[4,4] - D\[3,3] = 1-1 = 0$
+  - $D\[5,5] - D\[4,4] = 2-1 = 1$
+  - $D\[6,6] - D\[5,5] = 2-2 = 0$
+
+  As the lemma states, the difference is always 0 or 1.
+]
+
+=== The Ukkonen-Myers Algorithm
+This property is the foundation for faster algorithms like the *Ukkonen-Myers algorithm*.
+
+*Core Idea:* Instead of computing the value for every cell, the algorithm finds the furthest-reaching cell on each diagonal $d$ that can be computed with at most $k$ edits. Let this be row `r`. The algorithm then only needs to compute the values for the next edit count, `k+1`, starting from these frontier cells.
+
+This changes the problem from filling a matrix to a search over the diagonals. The resulting time complexity is $O(k(m+n))$ or simply $O(k n)$ if $n$ is the length of the longer string, where $k$ is the edit distance between the strings (or a specified maximum threshold). This is much faster if the strings are similar (i.e., $k$ is small).
+
+== Longest Common Subsequence (LCS) Distance
+
+The *Longest Common Subsequence (LCS)* of two strings is the longest sequence of characters that appears in the same order in both strings, but not necessarily consecutively.
+
+==== LCS Length Calculation
+The length of the LCS can be found using dynamic programming, similar to edit distance. Let $L\[i,j]$ be the length of the LCS of prefixes $A[1..i]$ and $B[1..j]$.
+
+#info_box(title: "Recurrence Relation for LCS Length")[
+  - If $i=0$ or $j=0$, $L\[i,j] = 0$.
+  - If $A\[i] = B\[j]$: $L\[i, j] = 1 + L\[i-1, j-1]$
+  - If $A\[i] != B\[j]$: $L\[i, j] = max(L\[i-1, j], L\[i, j-1])$
+]
+
+==== LCS Distance
+The LCS length can be used to define a distance metric. This metric counts the number of characters that are *not* part of the LCS.
+$d_"LCS"(A, B) = |A| + |B| - 2 * |"LCS"(A, B)|$
+This value represents the total number of insertions and deletions needed to transform A to B if no substitutions are allowed.
 
 == Tasks
 
-1. Calculate the Hamming distance between "1011101" and "1001001".
-2. What are the three basic operations considered in the standard Edit Distance?
-3. Fill the first row and first column of the dynamic programming matrix for computing the edit distance between "cat" and "dog".
+1. Calculate the Hamming distance between "PALE" and "POLE".
+2. Using the Wagner-Fischer algorithm, compute the full dynamic programming matrix to find the Levenshtein distance (with substitutions) between the strings "CAT" and "CAR".
+3. Explain the Diagonal Property of the edit distance DP matrix. Why is this property useful for creating faster algorithms?
+4. What is the main advantage of the Ukkonen-Myers algorithm over the standard Wagner-Fischer algorithm, and in what scenario is it most beneficial?
+5. What is the relationship between the LCS Distance and the strict Levenshtein distance (which only allows insertions and deletions)? Provide the formula.
 
 #pagebreak()
 
 == Solutions
 
 === Task 1: Hamming Distance
+The strings "PALE" and "POLE" have the same length (4). We compare them character by character:
+- P vs P (same)
+- A vs O (different)
+- L vs L (same)
+- E vs E (same)
+There is one position with different characters. The Hamming distance is 1.
 
-Strings: "1011101" and "1001001"
-They have the same length (7).
-- Position 2: 1 vs 0 (different)
-- Position 4: 1 vs 0 (different)
-- Position 5: 0 vs 0 (same)
-The Hamming distance is 2.
+=== Task 2: DP Matrix for "CAT" and "CAR"
+We compute the matrix $D$ for $A="CAT"$ and $B="CAR"$. The cost of insertion, deletion, and substitution is 1.
 
-=== Task 2: Edit Distance Operations
+#table(
+  columns: 5,
+  align: center,
+  [], [*ε*], [*C*], [*A*], [*R*],
+  [*ε*], [0], [1], [2], [3],
+  [*C*], [1], [0], [1], [2],
+  [*A*], [2], [1], [0], [1],
+  [*T*], [3], [2], [1], [1],
+)
+The final edit distance is $D\[3,3]=1$, which corresponds to substituting 'T' with 'R'.
 
-The three basic operations for the standard (Levenshtein) edit distance are:
-1. *Insertion*: Adding a character to a string.
-2. *Deletion*: Removing a character from a string.
-3. *Substitution* (or Replacement): Changing one character to another.
+=== Task 3: Diagonal Property
+The Diagonal Property states that for any cell $(i,j)$ in the Levenshtein DP matrix, the value $D\[i,j]$ differs from the value of the previous diagonal cell $D\[i-1,j-1]$ by either 0 or 1.
+- *Usefulness:* This property is crucial because it means we don't have to compute every cell value from scratch. If we know the value of a cell on a diagonal, we know the next cell on that diagonal will have the same value or be one greater. Algorithms like the Ukkonen-Myers algorithm exploit this to avoid filling the entire $O(n m)$ matrix, instead only tracking the changes along diagonals, which leads to significant speedups, especially when the edit distance is small.
 
-Each of these operations is typically assigned a cost of 1.
+=== Task 4: Ukkonen-Myers Advantage
+The main advantage of the Ukkonen-Myers algorithm is its improved time complexity. While Wagner-Fischer is always $O(n m)$, Ukkonen-Myers runs in $O(k d)$, where $d$ is the length of the strings and $k$ is the actual edit distance.
+- *Most Beneficial Scenario:* It is most beneficial when the two strings are very similar, meaning the edit distance `k` is small. For example, in DNA sequencing, where one might be looking for matches with only a few mutations, `k` would be much smaller than `n` or `m`, making the algorithm significantly faster than Wagner-Fischer.
 
-=== Task 3: DP Matrix for "cat" and "dog"
-
-Let `s1 = "cat"` and `s2 = "dog"`. The matrix $D$ will be 4x4.
-The first row and column are initialized based on the cost of insertions and deletions to transform a prefix into an empty string.
-
-- $D[0, 0] = 0$ (distance from empty to empty is 0).
-- First row (deletions from "cat" to empty):
-  - $D[0, 1] = 1$ ("c" to "")
-  - $D[0, 2] = 2$ ("ca" to "")
-  - $D[0, 3] = 3$ ("cat" to "")
-- First column (insertions to create "dog" from empty):
-  - $D[1, 0] = 1$ ("" to "d")
-  - $D[2, 0] = 2$ ("" to "do")
-  - $D[3, 0] = 3$ ("" to "dog")
-
-The initialized matrix would start like this:
-```
-  ε d o g
-ε 0 1 2 3
-c 1
-a 2
-t 3
-```
+=== Task 5: LCS and Levenshtein (ins/del only)
+The strict Levenshtein distance that only allows insertions and deletions is equivalent to the LCS distance.
+The formula is:
+$d_L(A, B) = |A| + |B| - 2 * |"LCS"(A, B)|$
+This formula works because the most efficient way to make two strings equal using only insertions and deletions is to find their longest common subsequence, keep those characters, and delete all other characters from both strings. The number of deletions is $|A| - |"LCS"|$ and the number of insertions is $|B| - |"LCS"|$. Summing these gives the formula.
